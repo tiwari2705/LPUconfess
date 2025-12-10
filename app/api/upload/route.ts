@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 
-export async function POST(req: NextRequest) {
+export async function POST(req: NextRequest) { 
   try {
     const session = await getServerSession(authOptions)
 

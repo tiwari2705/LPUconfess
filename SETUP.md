@@ -1,4 +1,4 @@
-# LPUconfess Setup Guide
+# sayitlpu Setup Guide
 
 ## Quick Start
 
@@ -34,13 +34,13 @@
 ### Option 1: UploadThing (Recommended)
 
 1. Sign up at [uploadthing.com](https://uploadthing.com)
-2. Get your API keys
-3. Add to `.env`:
+2. Go to your Dashboard → API Keys section
+3. Under the **V7** tab, copy your `UPLOADTHING_TOKEN`
+4. Add to `.env`:
    ```
-   UPLOADTHING_SECRET=your-secret
-   UPLOADTHING_APP_ID=your-app-id
+   UPLOADTHING_TOKEN=your-uploadthing-token
    ```
-4. Follow instructions in `lib/uploadthing.ts`
+   The token is a base64-encoded JSON object containing your API key, app ID, and regions.
 
 ### Option 2: Cloudinary
 

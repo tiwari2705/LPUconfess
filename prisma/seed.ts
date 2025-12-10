@@ -6,7 +6,6 @@ const prisma = new PrismaClient()
 async function main() {
   console.log("Seeding database...")
 
-  // Create admin user
   const adminEmail = "admin@lpuconfess.com"
   const adminPassword = await bcrypt.hash("admin123", 10)
 
@@ -16,7 +15,7 @@ async function main() {
     create: {
       email: adminEmail,
       hashedPassword: adminPassword,
-      idCardImage: "https://via.placeholder.com/300x200?text=Admin+ID",
+      idCardFileKey: "null", // 👈 FIXED
       status: "APPROVED",
       role: "ADMIN",
     },
@@ -35,4 +34,3 @@ main()
   .finally(async () => {
     await prisma.$disconnect()
   })
-

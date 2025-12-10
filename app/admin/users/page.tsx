@@ -13,7 +13,7 @@ import { formatDistanceToNow } from "date-fns"
 interface User {
   id: string
   email: string
-  idCardImage: string
+  idCardFileKey: string
   status: string
   isBanned: boolean
   createdAt: string
@@ -44,9 +44,7 @@ export default function AdminUsersPage() {
 
   const fetchUsers = async () => {
     try {
-      const url = filter
-        ? `/api/admin/users?status=${filter}`
-        : "/api/admin/users"
+      const url = filter ? `/api/admin/users?status=${filter}` : "/api/admin/users"
       const res = await fetch(url)
       const data = await res.json()
 
@@ -69,10 +67,7 @@ export default function AdminUsersPage() {
       })
 
       if (res.ok) {
-        toast({
-          title: "Success",
-          description: "User approved successfully",
-        })
+        toast({ title: "Success", description: "User approved successfully" })
         fetchUsers()
       } else {
         const data = await res.json()
@@ -100,10 +95,7 @@ export default function AdminUsersPage() {
       })
 
       if (res.ok) {
-        toast({
-          title: "Success",
-          description: "User rejected successfully",
-        })
+        toast({ title: "Success", description: "User rejected successfully" })
         fetchUsers()
       } else {
         const data = await res.json()
@@ -166,112 +158,116 @@ export default function AdminUsersPage() {
       <div className="container mx-auto py-8 px-4">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold text-white">User Management</h1>
-        <div className="flex space-x-2">
-          <Button
-            variant={filter === null ? "default" : "outline"}
-            onClick={() => setFilter(null)}
-            className={filter === null ? "bg-white text-black hover:bg-gray-200" : "border-gray-800 text-gray-400 hover:bg-gray-900 hover:text-white"}
-          >
-            All
-          </Button>
-          <Button
-            variant={filter === "PENDING" ? "default" : "outline"}
-            onClick={() => setFilter("PENDING")}
-            className={filter === "PENDING" ? "bg-white text-black hover:bg-gray-200" : "border-gray-800 text-gray-400 hover:bg-gray-900 hover:text-white"}
-          >
-            Pending
-          </Button>
-          <Button
-            variant={filter === "APPROVED" ? "default" : "outline"}
-            onClick={() => setFilter("APPROVED")}
-            className={filter === "APPROVED" ? "bg-white text-black hover:bg-gray-200" : "border-gray-800 text-gray-400 hover:bg-gray-900 hover:text-white"}
-          >
-            Approved
-          </Button>
-          <Button
-            variant={filter === "REJECTED" ? "default" : "outline"}
-            onClick={() => setFilter("REJECTED")}
-            className={filter === "REJECTED" ? "bg-white text-black hover:bg-gray-200" : "border-gray-800 text-gray-400 hover:bg-gray-900 hover:text-white"}
-          >
-            Rejected
-          </Button>
+          <div className="flex space-x-2">
+            <Button
+              variant={filter === null ? "default" : "outline"}
+              onClick={() => setFilter(null)}
+              className={filter === null ? "bg-white text-black hover:bg-gray-200" : "border-gray-800 text-gray-400 hover:bg-gray-900 hover:text-white"}
+            >
+              All
+            </Button>
+            <Button
+              variant={filter === "PENDING" ? "default" : "outline"}
+              onClick={() => setFilter("PENDING")}
+              className={filter === "PENDING" ? "bg-white text-black hover:bg-gray-200" : "border-gray-800 text-gray-400 hover:bg-gray-900 hover:text-white"}
+            >
+              Pending
+            </Button>
+            <Button
+              variant={filter === "APPROVED" ? "default" : "outline"}
+              onClick={() => setFilter("APPROVED")}
+              className={filter === "APPROVED" ? "bg-white text-black hover:bg-gray-200" : "border-gray-800 text-gray-400 hover:bg-gray-900 hover:text-white"}
+            >
+              Approved
+            </Button>
+            <Button
+              variant={filter === "REJECTED" ? "default" : "outline"}
+              onClick={() => setFilter("REJECTED")}
+              className={filter === "REJECTED" ? "bg-white text-black hover:bg-gray-200" : "border-gray-800 text-gray-400 hover:bg-gray-900 hover:text-white"}
+            >
+              Rejected
+            </Button>
+          </div>
         </div>
-      </div>
 
-      <div className="space-y-4">
-        {users.length === 0 ? (
-          <Card className="bg-gray-900 border-gray-800">
-            <CardContent className="py-12 text-center">
-              <p className="text-gray-400">No users found</p>
-            </CardContent>
-          </Card>
-        ) : (
-          users.map((user) => (
-            <Card key={user.id} className="bg-gray-900 border-gray-800">
-              <CardContent className="p-6">
-                <div className="flex items-start space-x-4">
-                  <div className="relative w-32 h-20 rounded border border-gray-700 overflow-hidden">
-                    <Image
-                      src={user.idCardImage}
-                      alt="ID Card"
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-semibold text-white">{user.email}</p>
-                        <p className="text-sm text-gray-400">
-                          Status: <span className="capitalize">{user.status.toLowerCase()}</span>
-                        </p>
-                        <p className="text-sm text-gray-400">
-                          Confessions: {user._count.confessions}
-                        </p>
-                        <p className="text-sm text-gray-400">
-                          Joined: {formatDistanceToNow(new Date(user.createdAt), { addSuffix: true })}
-                        </p>
-                      </div>
-                      <div className="flex space-x-2">
-                        {user.status === "PENDING" && (
-                          <>
-                            <Button
-                              size="sm"
-                              onClick={() => handleApprove(user.id)}
-                              className="bg-white text-black hover:bg-gray-200"
-                            >
-                              Approve
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              onClick={() => handleReject(user.id)}
-                            >
-                              Reject
-                            </Button>
-                          </>
-                        )}
-                        {user.status === "APPROVED" && (
-                          <Button
-                            size="sm"
-                            variant={user.isBanned ? "outline" : "destructive"}
-                            onClick={() => handleBan(user.id, !user.isBanned)}
-                            className={user.isBanned ? "border-gray-800 text-white hover:bg-gray-900" : ""}
-                          >
-                            {user.isBanned ? "Unban" : "Ban"}
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
+        <div className="space-y-4">
+          {users.length === 0 ? (
+            <Card className="bg-gray-900 border-gray-800">
+              <CardContent className="py-12 text-center">
+                <p className="text-gray-400">No users found</p>
               </CardContent>
             </Card>
-          ))
-        )}
-      </div>
+          ) : (
+            users.map((user) => {
+              const imageUrl = user.idCardFileKey
+                ? `https://utfs.io/f/${user.idCardFileKey}`
+                : "/admin-placeholder.png"
+
+              return (
+                <Card key={user.id} className="bg-gray-900 border-gray-800">
+                  <CardContent className="p-6">
+                    <div className="flex items-start space-x-4">
+                      <div className="relative w-32 h-20 rounded border border-gray-700 overflow-hidden">
+                        <Image
+                          src={imageUrl}
+                          alt="ID Card"
+                          fill
+                          unoptimized
+                          className="object-cover"
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-semibold text-white">{user.email}</p>
+                            <p className="text-sm text-gray-400">
+                              Status: <span className="capitalize">{user.status.toLowerCase()}</span>
+                            </p>
+                            <p className="text-sm text-gray-400">Confessions: {user._count.confessions}</p>
+                            <p className="text-sm text-gray-400">
+                              Joined: {formatDistanceToNow(new Date(user.createdAt), { addSuffix: true })}
+                            </p>
+                          </div>
+                          <div className="flex space-x-2">
+                            {user.status === "PENDING" && (
+                              <>
+                                <Button
+                                  size="sm"
+                                  onClick={() => handleApprove(user.id)}
+                                  className="bg-white text-black hover:bg-gray-200"
+                                >
+                                  Approve
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  onClick={() => handleReject(user.id)}
+                                >
+                                  Reject
+                                </Button>
+                              </>
+                            )}
+                            {user.status === "APPROVED" && (
+                              <Button
+                                size="sm"
+                                variant={user.isBanned ? "outline" : "destructive"}
+                                onClick={() => handleBan(user.id, !user.isBanned)}
+                                className={user.isBanned ? "border-gray-800 text-white hover:bg-gray-900" : ""}
+                              >
+                                {user.isBanned ? "Unban" : "Ban"}
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )
+            })
+          )}
+        </div>
       </div>
     </div>
   )
 }
-

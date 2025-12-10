@@ -56,9 +56,8 @@ A complete, production-ready anonymous confession platform with a beautiful dark
    NEXTAUTH_URL="http://localhost:3000"
    NEXTAUTH_SECRET="your-secret-key-here-generate-with-openssl-rand-base64-32"
 
-   # UploadThing (Optional)
-   UPLOADTHING_SECRET="your-uploadthing-secret"
-   UPLOADTHING_APP_ID="your-uploadthing-app-id"
+   # UploadThing (Required for ID card uploads)
+   UPLOADTHING_TOKEN="your-uploadthing-token"
 
    # Cloudinary (Optional - alternative to UploadThing)
    CLOUDINARY_CLOUD_NAME="your-cloud-name"
@@ -299,5 +298,6 @@ Perfect for anyone who wants to confess their sins, share secrets, or simply exp
 
 **Built with ❤️ for honest confessions**
 
-#   L P U c o n f e s s  
+#   L P U c o n f e s s 
+ 
  

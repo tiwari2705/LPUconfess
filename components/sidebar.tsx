@@ -21,10 +21,10 @@ export function Sidebar() {
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div className="space-y-2">
               <Link 
-                href="/user-agreement" 
+                href="/user-agreement"  
                 className="block text-gray-400 hover:text-white transition-colors"
               >
-                User Agreement
+                User Agreement       
               </Link>
               <Link 
                 href="/privacy-policy" 
@@ -52,7 +52,7 @@ export function Sidebar() {
 
         {/* Copyright */}
         <div className="text-xs text-gray-500 text-center">
-          © LPUconfess. All rights reserved.
+          © sayitlpu. All rights reserved.
         </div>
       </div>
     </aside>

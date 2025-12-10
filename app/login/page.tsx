@@ -66,7 +66,7 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-black p-4">
       <Card className="w-full max-w-md bg-gray-900 border-gray-800">
         <CardHeader>
-          <CardTitle className="text-2xl font-bold text-center text-white">LPUconfess</CardTitle>
+          <CardTitle className="text-2xl font-bold text-center text-white">sayitlpu</CardTitle>
           <CardDescription className="text-center text-gray-400">
             Sign in to your account
           </CardDescription>

@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
       select: {
         id: true,
         email: true,
-        idCardImage: true,
+        idCardFileKey: true,
         status: true,
         isBanned: true,
         createdAt: true,

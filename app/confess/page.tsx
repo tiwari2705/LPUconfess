@@ -1,105 +1,71 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useSession } from "next-auth/react"
-import { useRouter } from "next/navigation"
+import { useRouter, useParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { useToast } from "@/hooks/use-toast"
 import Image from "next/image"
-import { Loader2 } from "lucide-react"
+import { formatDistanceToNow } from "date-fns"
+import { Heart, MessageCircle, Flag, Loader2, Send } from "lucide-react"
 
-export default function ConfessPage() {
+interface Comment {
+  id: string
+  text: string
+  createdAt: string
+}
+
+interface Confession {
+  id: string
+  text: string
+  image?: string
+  likesCount: number
+  commentsCount: number
+  isLiked: boolean
+  comments: Comment[]
+  createdAt: string
+}
+
+export default function ConfessionDetailPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
-  const [text, setText] = useState("")
-  const [image, setImage] = useState<string | null>(null)
-  const [imageFile, setImageFile] = useState<File | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
+  const params = useParams()
+  const [confession, setConfession] = useState<Confession | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [commentText, setCommentText] = useState("")
+  const [isSubmittingComment, setIsSubmittingComment] = useState(false)
   const { toast } = useToast()
 
-  if (status === "loading") {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    )
-  }
-
-  if (status === "unauthenticated") {
-    router.push("/login")
-    return null
-  }
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      setImageFile(file)
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setImage(reader.result as string)
-      }
-      reader.readAsDataURL(file)
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/login")
+    } else if (status === "authenticated") {
+      fetchConfession()
     }
-  }
+  }, [status, router, params.id])
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-
+  const fetchConfession = async () => {
     try {
-      let imageUrl: string | undefined = undefined
-
-      if (imageFile) {
-        const formData = new FormData()
-        formData.append("file", imageFile)
-
-        const uploadRes = await fetch("/api/upload", {
-          method: "POST",
-          body: formData,
-        })
-
-        if (uploadRes.ok) {
-          const uploadData = await uploadRes.json()
-          imageUrl = uploadData.url
-        } else if (uploadRes.status === 501) {
-          // Use data URL as fallback if upload service not configured
-          imageUrl = image || undefined
-        } else {
-          throw new Error("Failed to upload image")
-        }
-      }
-
-      const res = await fetch("/api/confession/create", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          text,
-          image: imageUrl,
-        }),
-      })
-
+      const res = await fetch(`/api/confession/${params.id}`)
       const data = await res.json()
 
       if (res.ok) {
-        toast({
-          title: "Success",
-          description: "Confession posted successfully!",
-        })
-        router.push("/feed")
+        setConfession(data)
       } else {
         toast({
           title: "Error",
-          description: data.error || "Failed to create confession",
+          description: data.error || "Failed to load confession",
           variant: "destructive",
         })
+        router.push("/feed")
       }
-    } catch (error: any) {
+    } catch (error) {
+      console.error("Error fetching confession:", error)
       toast({
         title: "Error",
-        description: error.message || "An error occurred. Please try again.",
+        description: "An error occurred. Please try again.",
         variant: "destructive",
       })
     } finally {
@@ -107,79 +73,257 @@ export default function ConfessPage() {
     }
   }
 
+  const handleLike = async () => {
+    if (!confession) return
+
+    try {
+      const res = await fetch("/api/confession/like", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ confessionId: confession.id }),
+      })
+
+      const data = await res.json()
+
+      if (res.ok) {
+        setConfession((prev) =>
+          prev
+            ? {
+                ...prev,
+                isLiked: data.liked,
+                likesCount: data.liked
+                  ? prev.likesCount + 1
+                  : prev.likesCount - 1,
+              }
+            : null
+        )
+      }
+    } catch (error) {
+      console.error("Error liking confession:", error)
+    }
+  }
+
+  const handleComment = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!confession || !commentText.trim()) return
+
+    setIsSubmittingComment(true)
+
+    try {
+      const res = await fetch("/api/confession/comment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text: commentText,
+          confessionId: confession.id,
+        }),
+      })
+
+      const data = await res.json()
+
+      if (res.ok) {
+        setCommentText("")
+        setConfession((prev) =>
+          prev
+            ? {
+                ...prev,
+                comments: [...prev.comments, data],
+                commentsCount: prev.commentsCount + 1,
+              }
+            : null
+        )
+      } else {
+        toast({
+          title: "Error",
+          description: data.error || "Failed to post comment",
+          variant: "destructive",
+        })
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "An error occurred. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSubmittingComment(false)
+    }
+  }
+
+  const handleReport = async () => {
+    if (!confession) return
+
+    const reason = prompt("Please provide a reason for reporting this confession:")
+
+    if (!reason || reason.trim().length < 10) {
+      toast({
+        title: "Error",
+        description: "Please provide a valid reason (at least 10 characters)",
+        variant: "destructive",
+      })
+      return
+    }
+
+    try {
+      const res = await fetch("/api/confession/report", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ confessionId: confession.id, reason }),
+      })
+
+      if (res.ok) {
+        toast({
+          title: "Success",
+          description: "Report submitted successfully",
+        })
+      } else {
+        const data = await res.json()
+        toast({
+          title: "Error",
+          description: data.error || "Failed to submit report",
+          variant: "destructive",
+        })
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "An error occurred. Please try again.",
+        variant: "destructive",
+      })
+    }
+  }
+
+  if (status === "loading" || isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-black">
+        <Loader2 className="h-8 w-8 animate-spin text-white" />
+      </div>
+    )
+  }
+
+  if (!confession) return null
+
   return (
     <div className="min-h-screen bg-black">
-      <div className="container mx-auto py-8 max-w-2xl px-4">
+      <div className="container mx-auto py-8 max-w-3xl px-4">
         <Card className="bg-gray-900 border-gray-800">
-          <CardHeader>
-            <CardTitle className="text-white">Share Your Confession</CardTitle>
-            <CardDescription className="text-gray-400">
-              Your identity will remain completely anonymous
-            </CardDescription>
-          </CardHeader>
-        <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="text" className="text-white">Confession</Label>
-              <Textarea
-                id="text"
-                placeholder="What's on your mind?"
-                value={text}
-                onChange={(e) => setText(e.target.value)}
-                required
-                minLength={10}
-                maxLength={5000}
-                rows={8}
-                className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-500"
-              />
-              <p className="text-xs text-gray-400">
-                {text.length}/5000 characters
+          <CardContent className="p-6">
+
+            {/* DATE + TIME TOP RIGHT */}
+            <div className="flex justify-end">
+              <p className="text-xs text-gray-500">
+                {new Date(confession.createdAt).toLocaleDateString("en-IN", {
+                  day: "2-digit",
+                  month: "short",
+                  year: "numeric",
+                })} •{" "}
+                {new Date(confession.createdAt).toLocaleTimeString("en-IN", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
               </p>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="image" className="text-white">Image (Optional)</Label>
-              <input
-                id="image"
-                type="file"
-                accept="image/*"
-                onChange={handleFileChange}
-                className="w-full text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-gray-800 file:text-white hover:file:bg-gray-700"
-              />
-              {image && (
-                <div className="relative w-full h-64 rounded-lg overflow-hidden mt-2">
+
+            <div className="space-y-4">
+              <p className="whitespace-pre-wrap text-lg text-white leading-relaxed">{confession.text}</p>
+
+              {confession.image && (
+                <div className="relative w-full h-96 rounded-lg overflow-hidden">
                   <Image
-                    src={image}
-                    alt="Preview"
+                    src={confession.image}
+                    alt="Confession image"
                     fill
                     className="object-cover"
                   />
                 </div>
               )}
+
+              <div className="flex items-center space-x-4 pt-2 border-t border-gray-800">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleLike}
+                  className={`text-gray-400 hover:text-white hover:bg-gray-800 ${
+                    confession.isLiked ? "text-red-500" : ""
+                  }`}
+                >
+                  <Heart
+                    className={`h-4 w-4 mr-2 ${
+                      confession.isLiked ? "fill-current" : ""
+                    }`}
+                  />
+                  {confession.likesCount}
+                </Button>
+
+                <p className="text-gray-400 text-sm flex items-center space-x-1">
+                  <MessageCircle className="h-4 w-4" />
+                  <span>{confession.commentsCount}</span>
+                </p>
+
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={handleReport}
+                  className="text-gray-400 hover:text-white hover:bg-gray-800"
+                >
+                  <Flag className="h-4 w-4 mr-2" />
+                  Report
+                </Button>
+              </div>
             </div>
           </CardContent>
-          <div className="p-6 pt-0 flex justify-end space-x-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => router.back()}
-              className="border-gray-800 text-white hover:bg-gray-900"
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isLoading} className="bg-white text-black hover:bg-gray-200">
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Posting...
-                </>
+        </Card>
+
+        <Card className="mt-6 bg-gray-900 border-gray-800">
+          <CardContent className="p-6">
+            <h3 className="text-lg font-semibold mb-4 text-white">
+              Comments ({confession.commentsCount})
+            </h3>
+
+            <form onSubmit={handleComment} className="mb-6">
+              <div className="flex space-x-2">
+                <Textarea
+                  placeholder="Write a comment..."
+                  value={commentText}
+                  onChange={(e) => setCommentText(e.target.value)}
+                  className="flex-1 bg-gray-800 border-gray-700 text-white placeholder:text-gray-500"
+                  rows={2}
+                />
+                <Button
+                  type="submit"
+                  disabled={isSubmittingComment || !commentText.trim()}
+                  className="bg-white text-black hover:bg-gray-200"
+                >
+                  {isSubmittingComment ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Send className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+            </form>
+
+            <div className="space-y-4">
+              {confession.comments.length === 0 ? (
+                <p className="text-sm text-gray-400 text-center py-4">
+                  No comments yet. Be the first to comment!
+                </p>
               ) : (
-                "Post Confession"
+                confession.comments.map((comment) => (
+                  <div key={comment.id} className="border-b border-gray-800 pb-4 last:border-0">
+                    <p className="text-sm text-gray-400 mb-2">
+                      {formatDistanceToNow(new Date(comment.createdAt), {
+                        addSuffix: true,
+                      })}
+                    </p>
+                    <p className="whitespace-pre-wrap text-white">{comment.text}</p>
+                  </div>
+                ))
               )}
-            </Button>
-          </div>
-        </form>
-      </Card>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }
-

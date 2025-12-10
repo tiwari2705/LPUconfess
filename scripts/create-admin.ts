@@ -37,7 +37,7 @@ async function main() {
       create: {
         email,
         hashedPassword,
-        idCardImage: "https://via.placeholder.com/300x200?text=Admin+ID",
+        idCardFileKey: "null", // 👈 FIXED
         status: "APPROVED",
         role: "ADMIN",
       },
@@ -56,4 +56,3 @@ async function main() {
 }
 
 main()
-

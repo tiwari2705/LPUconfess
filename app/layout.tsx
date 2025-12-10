@@ -7,7 +7,7 @@ import { Providers } from "@/components/providers"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "LPUconfess - Anonymous Confessions",
+  title: "sayitlpu - Anonymous Confessions",
   description: "A safe space for LPU students to share their thoughts anonymously. Confess your deepest, darkest secrets without worrying about anyone finding out your true identity.",
 }
 

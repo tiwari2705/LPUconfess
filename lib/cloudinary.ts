@@ -31,7 +31,7 @@ export async function uploadToCloudinary(file: File): Promise<string> {
       .upload_stream(
         {
           resource_type: "image",
-          folder: "lpuconfess",
+          folder: "sayitlpu",
         },
         (error, result) => {
           if (error) {

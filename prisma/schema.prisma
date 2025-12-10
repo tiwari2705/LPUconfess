@@ -14,7 +14,8 @@ model User {
   id            String    @id @default(cuid())
   email         String    @unique
   hashedPassword String
-  idCardImage   String
+  idCardFileKey   String
+  idCardFileKey String?   // UploadThing file key for deletion
   status        UserStatus @default(PENDING)
   role          UserRole   @default(USER)
   isBanned      Boolean   @default(false)
