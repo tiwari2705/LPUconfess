@@ -15,7 +15,8 @@ async function main() {
     create: {
       email: adminEmail,
       hashedPassword: adminPassword,
-      idCardFileKey: "null", // 👈 FIXED
+      idCardFileKey: "null",
+      idCardImage: "null",  // 👈 FIXED
       status: "APPROVED",
       role: "ADMIN",
     },
