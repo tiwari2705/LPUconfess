@@ -27,17 +27,22 @@ async function main() {
   const hashedPassword = await bcrypt.hash(password, 10)
 
   try {
+    const placeholderId = "https://via.placeholder.com/300x200?text=Admin+ID"
+
     const admin = await prisma.user.upsert({
       where: { email },
       update: {
         hashedPassword,
         role: "ADMIN",
         status: "APPROVED",
+        idCardImage: placeholderId,
+        idCardFileKey: null,
       },
       create: {
         email,
         hashedPassword,
-        idCardFileKey: "null", // 👈 FIXED
+        idCardImage: placeholderId,
+        idCardFileKey: null,
         status: "APPROVED",
         role: "ADMIN",
       },

@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Loader2 } from "lucide-react"
+import { Loader2, ExternalLink } from "lucide-react" // Added ExternalLink icon
 import Image from "next/image"
 import { useToast } from "@/hooks/use-toast"
 import { formatDistanceToNow } from "date-fns"
@@ -14,6 +14,8 @@ interface User {
   id: string
   email: string
   idCardFileKey: string
+  // 👇 Added this field to match the new API response
+  idCardUrl: string | null 
   status: string
   isBanned: boolean
   createdAt: string
@@ -40,6 +42,7 @@ export default function AdminUsersPage() {
         fetchUsers()
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, session, router, filter])
 
   const fetchUsers = async () => {
@@ -199,29 +202,46 @@ export default function AdminUsersPage() {
             </Card>
           ) : (
             users.map((user) => {
-              const imageUrl = user.idCardFileKey
-                ? `https://utfs.io/f/${user.idCardFileKey}`
-                : "/admin-placeholder.png"
+              // 👇 UPDATED LOGIC: Use the URL directly from the API
+              const imageUrl = user.idCardUrl || "/admin-placeholder.png"
 
               return (
                 <Card key={user.id} className="bg-gray-900 border-gray-800">
                   <CardContent className="p-6">
                     <div className="flex items-start space-x-4">
-                      <div className="relative w-32 h-20 rounded border border-gray-700 overflow-hidden">
-                        <Image
-                          src={imageUrl}
-                          alt="ID Card"
-                          fill
-                          unoptimized
-                          className="object-cover"
-                        />
+                      
+                      {/* 👇 UPDATED IMAGE SECTION: Wrapped in <a> tag to open full size */}
+                      <div className="relative group w-32 h-20 rounded border border-gray-700 overflow-hidden bg-gray-800 flex-shrink-0">
+                        {user.idCardUrl ? (
+                          <a href={user.idCardUrl} target="_blank" rel="noopener noreferrer" className="block w-full h-full cursor-zoom-in">
+                            <Image
+                              src={imageUrl}
+                              alt="ID Card"
+                              fill
+                              unoptimized={true} // Keeps it working without strict domain config
+                              className="object-cover transition-transform group-hover:scale-105"
+                            />
+                            {/* Hover overlay hint */}
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                <ExternalLink className="text-white w-5 h-5" />
+                            </div>
+                          </a>
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-gray-500 text-xs">
+                             No Image
+                          </div>
+                        )}
                       </div>
-                      <div className="flex-1">
+
+                      <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="font-semibold text-white">{user.email}</p>
+                            <p className="font-semibold text-white truncate">{user.email}</p>
                             <p className="text-sm text-gray-400">
-                              Status: <span className="capitalize">{user.status.toLowerCase()}</span>
+                              Status: <span className={`capitalize font-medium ${
+                                user.status === 'APPROVED' ? 'text-green-500' : 
+                                user.status === 'REJECTED' ? 'text-red-500' : 'text-yellow-500'
+                              }`}>{user.status.toLowerCase()}</span>
                             </p>
                             <p className="text-sm text-gray-400">Confessions: {user._count.confessions}</p>
                             <p className="text-sm text-gray-400">

@@ -1,4 +1,4 @@
-# sayitlpu Setup Guide
+# sayitLPU Setup Guide
 
 ## Quick Start
 

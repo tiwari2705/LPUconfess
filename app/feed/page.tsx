@@ -1,15 +1,14 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useSession } from "next-auth/react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Heart, MessageCircle, Flame, Clock, ArrowRight, Loader2 } from "lucide-react"
+import { Heart, MessageCircle, Flame, Clock, ArrowRight, Loader2, Calendar } from "lucide-react"
 import Image from "next/image"
-import { formatDistanceToNow } from "date-fns"
 import { useToast } from "@/hooks/use-toast"
 import { Sidebar } from "@/components/sidebar"
 
@@ -34,6 +33,7 @@ export default function FeedPage() {
   const [isPosting, setIsPosting] = useState(false)
   const [sortBy, setSortBy] = useState<"newest" | "trending">("newest")
   const { toast } = useToast()
+  const confessionTextareaRef = useRef<HTMLTextAreaElement | null>(null)
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -45,6 +45,20 @@ export default function FeedPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, router, sortBy, searchParams])
 
+  const handleConfessionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value
+    setConfessionText(value)
+
+    const textarea = confessionTextareaRef.current
+    if (textarea) {
+      const maxHeight = 24 * 5 // approximately 5 lines at ~24px line height
+      textarea.style.height = "auto"
+      const newHeight = Math.min(textarea.scrollHeight, maxHeight)
+      textarea.style.height = `${newHeight}px`
+      textarea.style.overflowY = textarea.scrollHeight > maxHeight ? "auto" : "hidden"
+    }
+  }
+
   const fetchConfessions = async (search?: string) => {
     try {
       const searchParam = search || searchParams.get("search") || ""
@@ -53,10 +67,24 @@ export default function FeedPage() {
       const data = await res.json()
 
       if (res.ok) {
-        setConfessions(data.confessions)
-        // Set liked confessions based on API response
+        let fetchedConfessions: Confession[] = data.confessions || []
+
+        if (sortBy === "trending") {
+            fetchedConfessions.sort((a, b) => {
+                const scoreA = (a.likesCount || 0) + (a.commentsCount || 0)
+                const scoreB = (b.likesCount || 0) + (b.commentsCount || 0)
+                return scoreB - scoreA
+            })
+        } else {
+            fetchedConfessions.sort((a, b) => 
+                new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+            )
+        }
+        
+        setConfessions(fetchedConfessions)
+
         const likedIds = new Set(
-          data.confessions
+          fetchedConfessions
             .filter((conf: Confession & { isLiked?: boolean }) => conf.isLiked)
             .map((conf: Confession) => conf.id)
         )
@@ -153,6 +181,17 @@ export default function FeedPage() {
     }
   }
 
+  const formatDateTime = (dateString: string) => {
+    return new Date(dateString).toLocaleString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    })
+  }
+
   if (status === "loading" || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-black">
@@ -168,7 +207,10 @@ export default function FeedPage() {
           {/* Main Content */}
           <div className="flex-1 min-w-0">
             {/* Post Input */}
-            <div className="mb-6">
+
+
+
+            {/* <div className="mb-6">
               <div className="bg-gray-900 rounded-lg border border-gray-800 p-4 flex items-center gap-3">
                 <Input
                   type="text"
@@ -195,7 +237,34 @@ export default function FeedPage() {
                   )}
                 </Button>
               </div>
-            </div>
+            </div> */}
+
+
+            {/* Post Input */}
+<div className="mb-6">
+  <div className="bg-gray-900 rounded-lg border border-gray-800 p-4 flex items-start gap-3"> {/* Changed items-center to items-start for better alignment */}
+    <textarea
+      ref={confessionTextareaRef}
+      placeholder="Post a Confession"
+      value={confessionText}
+      onChange={handleConfessionChange}
+      // Default Enter = newline; auto-resize up to ~5 lines then scroll
+      className="flex-1 bg-gray-800 border border-gray-700 text-white placeholder:text-gray-500 focus:border-gray-600 rounded-md p-3 min-h-[50px] resize-none focus:outline-none text-sm"
+      style={{ maxHeight: "120px" }}
+    />
+    <Button
+      onClick={handlePostConfession}
+      disabled={isPosting || !confessionText.trim()}
+      className="bg-white text-black hover:bg-gray-200 mt-1" // Added mt-1 to align with the top of the textarea
+    >
+      {isPosting ? (
+        <Loader2 className="h-4 w-4 animate-spin" />
+      ) : (
+        <ArrowRight className="h-4 w-4" />
+      )}
+    </Button>
+  </div>
+</div>
 
             {/* Sort Buttons */}
             <div className="mb-6 flex gap-3">
@@ -224,60 +293,77 @@ export default function FeedPage() {
             </div>
 
             {/* Confessions Feed */}
-            <div className="space-y-4">
+            <div className="space-y-6">
               {confessions.length === 0 ? (
                 <Card className="bg-gray-900 border-gray-800">
-                  <CardContent className="py-12 text-center">
-                    <p className="text-gray-400">No confessions yet. Be the first to confess!</p>
-                  </CardContent>
+                  <div className="py-12 text-center text-gray-400">
+                    <p>No confessions yet. Be the first to confess!</p>
+                  </div>
                 </Card>
               ) : (
                 confessions.map((confession) => (
-                  <Card key={confession.id} className="bg-gray-900 border-gray-800">
-                    <CardContent className="p-6">
-                      <p className="text-white whitespace-pre-wrap mb-4 leading-relaxed">
-                        {confession.text}
-                      </p>
-                      {confession.image && (
-                        <div className="relative w-full h-64 rounded-lg overflow-hidden mb-4">
-                          <Image
-                            src={confession.image}
-                            alt="Confession image"
-                            fill
-                            className="object-cover"
-                          />
+                  <Card key={confession.id} className="bg-gray-900 border-gray-800 overflow-hidden flex flex-col">
+                    
+                    {/* --- TOP SECTION (2/3 WEIGHT) --- */}
+                    {/* Content area that grows to fill space, minimal padding at bottom */}
+                    <div className="p-6 pb-4 flex-1">
+                        <div className="flex justify-end mb-3">
+                            <span className="text-xs text-gray-400 font-medium flex items-center bg-gray-950/50 px-3 py-1.5 rounded-full border border-gray-800">
+                            <Calendar className="w-3 h-3 mr-2" />
+                            {formatDateTime(confession.createdAt)}
+                            </span>
                         </div>
-                      )}
-                      <div className="flex items-center gap-4 pt-4 border-t border-gray-800">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleLike(confession.id)}
-                          className={`text-gray-400 hover:text-white hover:bg-gray-800 ${
-                            likedConfessions.has(confession.id) ? "text-red-500" : ""
-                          }`}
-                        >
-                          <Heart
-                            className={`h-4 w-4 mr-2 ${
-                              likedConfessions.has(confession.id)
-                                ? "fill-current"
-                                : ""
-                            }`}
-                          />
-                          Like
-                        </Button>
-                        <Link href={`/confession/${confession.id}`}>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-gray-400 hover:text-white hover:bg-gray-800"
-                          >
-                            <MessageCircle className="h-4 w-4 mr-2" />
-                            Comment
-                          </Button>
-                        </Link>
-                      </div>
-                    </CardContent>
+
+                        <p className="text-white whitespace-pre-wrap text-lg leading-relaxed mb-4">
+                            {confession.text}
+                        </p>
+                        
+                        {confession.image && (
+                            <div className="relative w-full h-72 rounded-lg overflow-hidden mt-4">
+                            <Image
+                                src={confession.image}
+                                alt="Confession image"
+                                fill
+                                className="object-cover"
+                            />
+                            </div>
+                        )}
+                    </div>
+
+                    {/* --- BOTTOM SECTION (1/3 WEIGHT) --- */}
+                    {/* Distinct footer with background color change and larger padding to simulate 1/3 weight */}
+                    <div className="bg-gray-800/30 p-5 border-t border-gray-800 mt-auto">
+                        <div className="flex items-center justify-between px-2">
+                            <div className="flex gap-6">
+                                <Button
+                                    variant="ghost"
+                                    onClick={() => handleLike(confession.id)}
+                                    className={`text-gray-400 hover:text-white hover:bg-gray-700/50 h-auto py-2 px-4 rounded-full transition-all ${
+                                        likedConfessions.has(confession.id) ? "text-red-500 hover:text-red-400 bg-red-500/10" : ""
+                                    }`}
+                                >
+                                    <Heart
+                                        className={`h-5 w-5 mr-2.5 ${
+                                        likedConfessions.has(confession.id)
+                                            ? "fill-current"
+                                            : ""
+                                        }`}
+                                    />
+                                    <span className="font-medium">{confession.likesCount} Likes</span>
+                                </Button>
+                                
+                                <Link href={`/confession/${confession.id}`}>
+                                    <Button
+                                        variant="ghost"
+                                        className="text-gray-400 hover:text-white hover:bg-gray-700/50 h-auto py-2 px-4 rounded-full transition-all"
+                                    >
+                                        <MessageCircle className="h-5 w-5 mr-2.5" />
+                                        <span className="font-medium">{confession.commentsCount} Comments</span>
+                                    </Button>
+                                </Link>
+                            </div>
+                        </div>
+                    </div>
                   </Card>
                 ))
               )}
@@ -291,4 +377,3 @@ export default function FeedPage() {
     </div>
   )
 }
-

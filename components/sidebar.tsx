@@ -16,43 +16,33 @@ export function Sidebar() {
           </p>
         </div>
 
+
+        
+
         {/* Links Section */}
         <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div className="space-y-2">
-              <Link 
-                href="/user-agreement"  
-                className="block text-gray-400 hover:text-white transition-colors"
-              >
-                User Agreement       
-              </Link>
-              <Link 
-                href="/privacy-policy" 
-                className="block text-gray-400 hover:text-white transition-colors"
-              >
-                Privacy Policy
-              </Link>
-            </div>
-            <div className="space-y-2">
-              <Link 
-                href="/contact" 
-                className="block text-gray-400 hover:text-white transition-colors"
-              >
-                Contact
-              </Link>
-              <Link 
-                href="/about" 
-                className="block text-gray-400 hover:text-white transition-colors"
-              >
-                About Us
-              </Link>
-            </div>
+          <div className="space-y-3 text-sm">
+            <Link 
+              href="/user-agreement"  
+              className="block text-gray-400 hover:text-white transition-colors"
+            >
+              User Agreement       
+            </Link>
+            <Link 
+              href="/user-agreement#privacy-policy" 
+              className="block text-gray-400 hover:text-white transition-colors"
+            >
+              Privacy Policy
+            </Link>
           </div>
         </div>
 
+
+
+
         {/* Copyright */}
         <div className="text-xs text-gray-500 text-center">
-          © sayitlpu. All rights reserved.
+          © sayitLPU. All rights reserved.
         </div>
       </div>
     </aside>

@@ -31,7 +31,7 @@ export function Navbar() {
         {/* Logo */}
         <Link href="/feed" className="flex items-center space-x-2 flex-shrink-0">
           <Building2 className="h-6 w-6 text-white" />
-          <span className="font-bold text-xl text-white">sayitlpu</span>
+          <span className="font-bold text-xl text-white">sayitLPU</span>
         </Link>
 
         {/* Search Bar */}

@@ -22,17 +22,19 @@ export async function GET(req: NextRequest) {
         isBanned: true,
         createdAt: true,
         _count: {
-          select: {
-            confessions: true,
-          },
+          select: { confessions: true },
         },
       },
-      orderBy: {
-        createdAt: "desc",
-      },
+      orderBy: { createdAt: "desc" },
     })
 
-    return NextResponse.json({ users })
+    // 👇 Add formatted URL for preview — matches your admin UI exactly
+    const formatted = users.map((u) => ({
+      ...u,
+      idCardUrl: u.idCardFileKey ? `https://utfs.io/f/${u.idCardFileKey}` : null,
+    }))
+
+    return NextResponse.json({ users: formatted })
   } catch (error) {
     console.error("Get users error:", error)
     return NextResponse.json(
@@ -41,4 +43,3 @@ export async function GET(req: NextRequest) {
     )
   }
 }
-

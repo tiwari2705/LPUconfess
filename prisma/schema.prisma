@@ -11,21 +11,21 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
+  id             String     @id @default(cuid())
+  email          String     @unique
   hashedPassword String
-  idCardFileKey   String
-  idCardFileKey String?   // UploadThing file key for deletion
-  status        UserStatus @default(PENDING)
-  role          UserRole   @default(USER)
-  isBanned      Boolean   @default(false)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  idCardImage    String
+  idCardFileKey  String?
+  status         UserStatus @default(PENDING)
+  role           UserRole   @default(USER)
+  isBanned       Boolean    @default(false)
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
 
-  confessions   Confession[]
-  likes         Like[]
-  comments      Comment[]
-  reports       Report[]
+  confessions Confession[]
+  likes       Like[]
+  comments    Comment[]
+  reports     Report[]
 
   @@map("users")
 }
@@ -42,18 +42,18 @@ enum UserRole {
 }
 
 model Confession {
-  id          String   @id @default(cuid())
-  text        String   @db.Text
-  image       String?
-  authorId    String
-  isRemoved   Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String   @id @default(cuid())
+  text      String   @db.Text
+  image     String?
+  authorId  String
+  isRemoved Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  author      User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  likes       Like[]
-  comments    Comment[]
-  reports     Report[]
+  author   User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  likes    Like[]
+  comments Comment[]
+  reports  Report[]
 
   @@map("confessions")
 }
@@ -64,8 +64,8 @@ model Like {
   userId       String
   createdAt    DateTime @default(now())
 
-  confession   Confession @relation(fields: [confessionId], references: [id], onDelete: Cascade)
-  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  confession Confession @relation(fields: [confessionId], references: [id], onDelete: Cascade)
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([confessionId, userId])
   @@map("likes")
@@ -79,8 +79,8 @@ model Comment {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  confession   Confession @relation(fields: [confessionId], references: [id], onDelete: Cascade)
-  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  confession Confession @relation(fields: [confessionId], references: [id], onDelete: Cascade)
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("comments")
 }
@@ -92,9 +92,8 @@ model Report {
   reporterId   String
   createdAt    DateTime @default(now())
 
-  confession   Confession @relation(fields: [confessionId], references: [id], onDelete: Cascade)
-  reporter     User       @relation(fields: [reporterId], references: [id], onDelete: Cascade)
+  confession Confession @relation(fields: [confessionId], references: [id], onDelete: Cascade)
+  reporter   User       @relation(fields: [reporterId], references: [id], onDelete: Cascade)
 
   @@map("reports")
 }
-

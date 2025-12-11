@@ -6,14 +6,14 @@ import { z } from "zod"
 const registerSchema = z.object({
   email: z.string().email("Invalid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
-  idCardFileKey: z.string().url("Invalid image URL"),
+  idCardImage: z.string().url("Invalid image URL"),
   idCardFileKey: z.string().min(1, "File key is required"),
 })
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { email, password, idCardFileKey, idCardFileKey } = registerSchema.parse(body)
+    const { email, password, idCardImage, idCardFileKey } = registerSchema.parse(body)
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
       data: {
         email,
         hashedPassword,
-        idCardFileKey,
+        idCardImage,
         idCardFileKey,
         status: "PENDING",
       },
@@ -63,4 +63,3 @@ export async function POST(req: NextRequest) {
     )
   }
 }
-
